@@ -12,19 +12,25 @@ import RxCocoa
 
 class ViewController: UIViewController {
 
-    @IBOutlet weak var label: UILabel!
-    @IBOutlet weak var textfield: UITextField!
     
     
-    //
+    
+    @IBOutlet weak var input_box_1: UITextField!
+
+    @IBOutlet weak var input_box_2: UITextField!
+    @IBOutlet weak var input_box_3: UITextField!
+    @IBOutlet weak var display_add_number: UILabel!
+    
+    
     let disposeBag = DisposeBag()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        textfield.rx.text.orEmpty.bind(to: label.rx.text).disposed(by: disposeBag)
+        input_box_1.rx.text.orEmpty.bind(to: display_add_number.rx.text).disposed(by: disposeBag)
+        input_box_2.rx.text.orEmpty.bind(to: display_add_number.rx.text).disposed(by: disposeBag)
+        input_box_3.rx.text.orEmpty.bind(to: display_add_number.rx.text).disposed(by: disposeBag)
         
-        //
     }
     
     override func didReceiveMemoryWarning() {
