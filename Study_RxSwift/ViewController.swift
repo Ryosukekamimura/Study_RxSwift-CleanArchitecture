@@ -15,27 +15,26 @@ class ViewController: UIViewController {
     
     
     
-    @IBOutlet weak var input_box_1: UITextField!
-    
-    @IBOutlet weak var input_box_2: UITextField!
-    @IBOutlet weak var input_box_3: UITextField!
-    @IBOutlet weak var display_add_number: UILabel!
+    @IBOutlet weak var textField1: UITextField!
+    @IBOutlet weak var textField2: UITextField!
+    @IBOutlet weak var textFiled3: UITextField!
+    @IBOutlet weak var displayNum: UILabel!
     
     
     let disposeBag = DisposeBag()
     
-    func checknumber(str: String) -> Int {
+    func numCheck(str: String) -> Int {
         return (Int(str) ?? 0)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        Observable.combineLatest(input_box_1.rx.text.orEmpty, input_box_2.rx.text.orEmpty, input_box_3.rx.text.orEmpty) { textValue1, textValue2, textValue3 -> Int in
-            return self.checknumber(str: textValue1) + self.checknumber(str: textValue2) + self.checknumber(str: textValue3)
+        Observable.combineLatest(textField1.rx.text.orEmpty, textField2.rx.text.orEmpty, textFiled3.rx.text.orEmpty) { textValue1, textValue2, textValue3 -> Int in
+            return self.numCheck(str: textValue1) + self.numCheck(str: textValue2) + self.numCheck(str: textValue3)
         }
         .map{ $0.description }
-        .bind(to: display_add_number.rx.text)
+        .bind(to: displayNum.rx.text)
         .disposed(by: disposeBag)
         
         
