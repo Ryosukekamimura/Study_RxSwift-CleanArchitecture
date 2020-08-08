@@ -11,12 +11,12 @@ import RxSwift
 import RxCocoa
 
 class ViewController: UIViewController {
-
+    
     
     
     
     @IBOutlet weak var input_box_1: UITextField!
-
+    
     @IBOutlet weak var input_box_2: UITextField!
     @IBOutlet weak var input_box_3: UITextField!
     @IBOutlet weak var display_add_number: UILabel!
@@ -24,19 +24,22 @@ class ViewController: UIViewController {
     
     let disposeBag = DisposeBag()
     
+    func checknumber(str: String) -> Int {
+        return (Int(str) ?? 0)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        input_box_1.rx.text.orEmpty.bind(to: display_add_number.rx.text).disposed(by: disposeBag)
-        input_box_2.rx.text.orEmpty.bind(to: display_add_number.rx.text).disposed(by: disposeBag)
-        input_box_3.rx.text.orEmpty.bind(to: display_add_number.rx.text).disposed(by: disposeBag)
+        Observable.combineLatest(input_box_1.rx.text.orEmpty, input_box_2.rx.text.orEmpty, input_box_3.rx.text.orEmpty) { textValue1, textValue2, textValue3 -> Int in
+            return self.checknumber(str: textValue1) + self.checknumber(str: textValue2) + self.checknumber(str: textValue3)
+        }
+        .map{ $0.description }
+        .bind(to: display_add_number.rx.text)
+        .disposed(by: disposeBag)
+        
+        
         
     }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-    }
-
-
 }
 
