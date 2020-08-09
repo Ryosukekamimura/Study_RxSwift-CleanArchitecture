@@ -10,35 +10,58 @@ import UIKit
 import RxSwift
 import RxCocoa
 
+fileprivate let minimalUsernameLength = 5
+fileprivate let minimalPasswordLength = 5
+
+
 class ViewController: UIViewController {
     
+    @IBOutlet weak var usernameLabel: UILabel!
+    @IBOutlet weak var usernameTextField: UITextField!
+    @IBOutlet weak var usernameErrorLabel: UILabel!
+    @IBOutlet weak var passwordLabel: UILabel!
+    @IBOutlet weak var passwordTextField: UITextField!
+    @IBOutlet weak var passwordErrorLabel: UILabel!
+    @IBOutlet weak var addButton: UIButton!
     
-    
-    
-    @IBOutlet weak var textField1: UITextField!
-    @IBOutlet weak var textField2: UITextField!
-    @IBOutlet weak var textFiled3: UITextField!
-    @IBOutlet weak var displayNum: UILabel!
+    @IBAction func addButtonAction(_ sender: Any) {
+        let alert = UIAlertController(title: "RxSwift", message: "RxSwift is fun", preferredStyle: UIAlertController.Style.alert)
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
     
     
     let disposeBag = DisposeBag()
     
-    func numCheck(str: String) -> Int {
-        return (Int(str) ?? 0)
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        Observable.combineLatest(textField1.rx.text.orEmpty, textField2.rx.text.orEmpty, textFiled3.rx.text.orEmpty) { textValue1, textValue2, textValue3 -> Int in
-            return self.numCheck(str: textValue1) + self.numCheck(str: textValue2) + self.numCheck(str: textValue3)
-        }
-        .map{ $0.description }
-        .bind(to: displayNum.rx.text)
-        .disposed(by: disposeBag)
+        usernameLabel.text = "ユーザーネームは、\(minimalUsernameLength)以上です。"
+        passwordLabel.text = "パスワードは、\(minimalPasswordLength)以上です。"
         
         
+        let userNameValid = usernameTextField.rx.text.orEmpty
+            .map{ $0.count >= minimalUsernameLength }
+            .share(replay: 1)
         
+        let passWordValid = passwordTextField.rx.text.orEmpty
+            .map{ $0.count >= minimalPasswordLength }
+            .share(replay: 1)
+        
+        let everythingValid = Observable.combineLatest(userNameValid, passWordValid){ $0 && $1 }
+            .share(replay: 1)
+        
+        userNameValid.bind(to: passwordTextField.rx.isEnabled).disposed(by: disposeBag)
+        userNameValid.bind(to: usernameErrorLabel.rx.isHidden).disposed(by: disposeBag)
+        
+        passWordValid.bind(to: passwordErrorLabel.rx.isHidden).disposed(by: disposeBag)
+        
+        everythingValid.bind(to: addButton.rx.isEnabled).disposed(by: disposeBag)
+        everythingValid.bind(to: addButton.rx.isEnabled).disposed(by: disposeBag)
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
     }
 }
-
