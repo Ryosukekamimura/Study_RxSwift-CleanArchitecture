@@ -37,8 +37,8 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        usernameLabel.text = "ユーザーネームは、\(minimalUsernameLength)以上です。"
-        passwordLabel.text = "パスワードは、\(minimalPasswordLength)以上です。"
+        usernameErrorLabel.text = "ユーザーネームは、\(minimalUsernameLength)以上です。"
+        passwordErrorLabel.text = "パスワードは、\(minimalPasswordLength)以上です。"
         
         
         let userNameValid = usernameTextField.rx.text.orEmpty
