@@ -10,55 +10,95 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-fileprivate let minimalUsernameLength = 5
-fileprivate let minimalPasswordLength = 5
-
-
 class ViewController: UIViewController {
     
-    @IBOutlet weak var usernameLabel: UILabel!
-    @IBOutlet weak var usernameTextField: UITextField!
-    @IBOutlet weak var usernameErrorLabel: UILabel!
-    @IBOutlet weak var passwordLabel: UILabel!
-    @IBOutlet weak var passwordTextField: UITextField!
-    @IBOutlet weak var passwordErrorLabel: UILabel!
-    @IBOutlet weak var addButton: UIButton!
+    @IBOutlet weak var greetingLabel: UILabel!
+    @IBOutlet weak var stateSegmentControl: UISegmentedControl!
+    @IBOutlet weak var freeTextField: UITextField!
+    @IBOutlet weak var nameTextField: UITextField!
     
-    @IBAction func addButtonAction(_ sender: Any) {
-        let alert = UIAlertController(title: "RxSwift", message: "RxSwift is fun", preferredStyle: UIAlertController.Style.alert)
-        alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
-        self.present(alert, animated: true, completion: nil)
+    
+    
+    
+    @IBOutlet weak var greetingButtons: UIButton!
+    
+    
+    
+    //観測オブジェクト対象の一括解放
+    let disposedBag = DisposeBag()
+    
+    //SegmentControllに対応する値の定義
+    enum State: Int {
+        case useButtons
+        case useTextField
     }
-    
-    
-    let disposeBag = DisposeBag()
-    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        usernameErrorLabel.text = "ユーザーネームは、\(minimalUsernameLength)以上です。"
-        passwordErrorLabel.text = "パスワードは、\(minimalPasswordLength)以上です。"
+        //「お名前：」の入力フィールドにおいて、テキスト入力のイベントを観測対象にする
+        let nameObservable: Observable<String?> = nameTextField.rx.text.asObservable()
+        
+        //「自由入力：」の入力フィールドにおいて、テキスト入力のイベントを観測対象にするn
+        let freeObservable: Observable<String?> = freeTextField.rx.text.asObservable()
         
         
-        let userNameValid = usernameTextField.rx.text.orEmpty
-            .map{ $0.count >= minimalUsernameLength }
-            .share(replay: 1)
+        //Observable.combineLatestで「お名前：」と「自由入力：」を結合する
+        let freewordWithNameObservable: Observable<String?> = Observable.combineLatest(
+            nameObservable,
+            freeObservable
+        ) { (string1: String?, string2: String?) in
+                return string1! + string2!
+        }
         
-        let passWordValid = passwordTextField.rx.text.orEmpty
-            .map{ $0.count >= minimalPasswordLength }
-            .share(replay: 1)
         
-        let everythingValid = Observable.combineLatest(userNameValid, passWordValid){ $0 && $1 }
-            .share(replay: 1)
+        freewordWithNameObservable.bind(to: greetingLabel.rx.text).disposed(by: disposedBag)
         
-        userNameValid.bind(to: passwordTextField.rx.isEnabled).disposed(by: disposeBag)
-        userNameValid.bind(to: usernameErrorLabel.rx.isHidden).disposed(by: disposeBag)
+        let segmentObservableControl: Observable<Int> = stateSegmentControl.rx.value.asObservable()
         
-        passWordValid.bind(to: passwordErrorLabel.rx.isHidden).disposed(by: disposeBag)
+        let stateObservable: Observable<State> = segmentObservableControl.map{
+            (selectedIndex: Int) -> State in
+            return State(rawValue: selectedIndex)!
+        }
         
-        everythingValid.bind(to: addButton.rx.isEnabled).disposed(by: disposeBag)
-        everythingValid.bind(to: addButton.rx.isEnabled).disposed(by: disposeBag)
+        let greetingTextFieldObservable: Observable<Bool> = stateObservable.map {
+            (state: State) -> Bool in
+            return state == .useTextField
+        }
+        
+        greetingTextFieldObservable.bind(to: freeTextField.rx.isEnabled).disposed(by: disposedBag)
+        
+        
+        let buttonsEnabledObservable: Observable<Bool> = greetingTextFieldObservable{
+            (greetingEnabled: Bool) -> Bool in
+                return !greetingEnabled
+        }
+        
+        
+        greetingButtons.forEach{ button in
+            buttonsEnabledObservable.bind(to: button.rx.isEnabled).disposed(by: disposedBag)
+            
+            button.rx.tap.subscribe(onNext: { (nothing: Void) in
+                self.lastSelectedGreeting.value = button.currentTitle!
+                
+            }).disposed(by: disposedBag)
+        }
+        
+        
+        let predefinedGreetingObservable: Observable<String> = lastSelectedGreeting.asObservable()
+        
+        let finalGreetingObservable: Observable<String> = Obsevable.combineLasted(stateObservable, freeObservable, predefinedGreetingObservable, nameObservable) { (state: State, freeword: String?, predefinedGreeting: String, name: String?) -> String in
+            
+            switch state {
+                case .useTextField: return freewor! + name!
+                case .useButtons:  return predefinedGreeting + name!
+            }
+        }
+        
+        
+        
+        
+        
     }
     
     override func didReceiveMemoryWarning() {
